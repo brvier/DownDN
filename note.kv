@@ -4,9 +4,10 @@
 
 <CircularButton>:
     text: ''
+    color: .8, .2, .2
     canvas:
         Color:
-            rgb: .8,.2,.2
+            rgb: root.color
         Ellipse:
             pos: self.pos
             size: self.size
@@ -219,7 +220,7 @@
                 text: '<'
                 size_hint_x: None
                 width: self.height
-                on_release: app.go_notes()
+                on_release: app.go_todos()
 
         BoxLayout:
             orientation: 'horizontal'
@@ -292,28 +293,26 @@
             #height: dp(40 * len(app.todos))
 
     BoxLayout:
+        orientation: 'vertical'
         pos_hint: {'right': 1, 'bottom': 1}
         padding: '10dp', '10dp'
         size_hint: None, None
-        height: '68dp'
+        height: '126dp'
+        spacing: dp(10)
         width: '68dp'
+        CircularButton:
+            text: 'N'
+            height: '48dp'
+            width: '48dp'
+            on_release: app.go_notes()
+            color: .1, .1, .5
+
         CircularButton:
             text: '+'
             height: '48dp'
             width: '48dp'
             on_release: app.add_todos()
 
-    BoxLayout:
-        pos_hint: {'left': 1, 'bottom': 1}
-        padding: '10dp', '10dp'
-        size_hint: None, None
-        height: '68dp'
-        width: '68dp'
-        CircularButton:
-            text: '>'
-            height: '48dp'
-            width: '48dp'
-            on_release: app.go_notes()
 
 
 <NotesScreen>:
@@ -333,8 +332,17 @@
         pos_hint: {'right': 1, 'bottom': 1}
         padding: '10dp', '10dp'
         size_hint: None, None
-        height: '68dp'
+        orientation: 'vertical'
+        spacing: dp(10)
+        height: '126dp'
         width: '68dp'
+        CircularButton:
+            text: '[ ]'
+            height: '48dp'
+            width: '48dp'
+            on_release: app.go_todos()
+            color: .1, .1, .5
+
         CircularButton:
             text: '+'
             height: '48dp'
