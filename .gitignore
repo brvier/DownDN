@@ -1,0 +1,11 @@
+bin
+build
+dist
+secrets.py
+*.pyc
+*.so
+*~
+*.swp
+*.ini
+*.sublime-project
+*.buildozer

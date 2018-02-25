@@ -1,0 +1,342 @@
+#:import ListAdapter kivy.adapters.listadapter.ListAdapter
+#:import Factory kivy.factory.Factory
+#:import ScrollView kivy.uix.scrollview.ScrollView
+
+<CircularButton>:
+    text: ''
+    canvas:
+        Color:
+            rgb: .8,.2,.2
+        Ellipse:
+            pos: self.pos
+            size: self.size
+    padding: (dp(8), 0)
+    Label:
+        center: self.parent.center
+        color: 1,1,1,1
+        text: self.parent.text
+        font_size: '18sp'
+
+<Screen>:
+    canvas:
+        Color:
+            rgb: .1, .1, .1
+        Rectangle:
+            size: self.size
+
+<MutableLabelTextInput@MutableTextInput>:
+    Label:
+        id: w_label
+        pos: root.pos
+        text: root.text
+        halign: 'right'
+
+    TextInput:
+        id: w_textinput
+        pos: root.pos
+        text: root.text
+        multiline: root.multiline
+        background_color: (.1, .1, .1, 1)
+        foreground_color: (1, 1, 1, 1)
+        input_type: 'text'
+        on_focus: root.check_focus_and_view(self)
+
+<MutableTextDocumentTextInput@MutableTextInput>:
+    ScrollView:
+        id: w_label
+        Label:
+            pos: root.pos
+            text: root.text
+            valign: 'top'
+            halign: 'left'
+            size_hint_y: None
+            height: self.texture_size[1]
+            text_size: self.width, None
+
+    CodeInput:
+        id: w_textinput
+        pos: root.pos
+        text: root.text
+        multiline: root.multiline
+        background_color: (.1, .1, .1, 1)
+        foreground_color: (1, 1, 1, 1)
+        input_type: 'text'
+        on_focus: root.check_focus_and_view(self)
+
+<NotesRecycleView>:
+    viewclass: 'NoteListItem'
+    SelectableRecycleBoxLayout:
+        default_size: None, dp(56)
+        default_size_hint: 1, None
+        size_hint_y: None
+        height: self.minimum_height
+        orientation: 'vertical'
+ 
+<TodosRecycleView>:
+    viewclass: 'TodoListItem'
+    SelectableRecycleBoxLayout:
+        default_size: None, dp(40)
+        default_size_hint: 1, None
+        size_hint_y: None
+        height: self.minimum_height
+        orientation: 'vertical'
+        
+<NoteView>:
+
+    on_content: app.save_note(self.filepath, self.index, self.content)
+    on_title: app.set_note_title(self.filepath, self.index, self.title )
+
+    BoxLayout:
+
+        orientation: 'vertical'
+        BoxLayout:
+
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '48dp'
+            padding: '5dp'
+
+            canvas:
+                Color:
+                    rgb: .3, .3, .3
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            ActionButton:
+                text: '<'
+                size_hint_x: None
+                width: self.height
+                on_release: app.go_notes()
+
+            MutableLabelTextInput:
+                text: root.title
+                font_size: '16sp'
+                multiline: False
+                padding: '15dp'
+                on_text: root.title = self.text
+
+            ActionButton:
+                text: 'X'
+                size_hint_x: None
+                width: self.height
+                on_release: app.del_note(root.filepath)
+
+        #MutableTextDocumentTextInput:
+        CodeInput:
+            id: w_textinput
+            text: root.content
+            on_text: root.content = self.text
+            background_color: (.1, .1, .1, 1)
+            foreground_color: (1, 1, 1, 1)
+
+<TodoListItem>:
+    height: dp(18)
+    #size_hint_y: None
+    #on_release: app.edit_note(root.note_index)
+    canvas:
+        Color:
+            rgb: .1, .1, .1
+        Rectangle:
+            pos: self.pos
+            size: self.width, 1
+
+    BoxLayout:
+        padding: dp(10), dp(5)
+        orientation: 'horizontal'
+        Image:
+            source: 'datas/checked.png' if root.done else 'datas/unchecked.png'
+            size_hint: None, None
+            size: dp(16), dp(16)
+            pos_hint: {'center_y': 0.5}
+        BoxLayout:
+            padding: dp(10), 0, 0, 0
+            orientation: 'vertical'
+            pos_hint: {'center_y': 0.5}
+            Label:
+                text: root.text
+                halign: 'left'
+                text_size: self.size
+            Label:
+                text: root.due if root.due else 'None'
+                color: 0.5, 0.5, 0.5, 1
+                font_size: sp(10)
+                halign: 'left'
+                size: dp(64), dp(12) if root.due else dp(0)
+                text_size: self.size
+  
+<NoteListItem>:
+    height: dp(48)
+    size_hint_y: None
+    on_selected: app.edit_note(root.index)
+    canvas:
+        Color:
+            rgb: .2, .2, .2
+        Rectangle:
+            pos: self.pos[0] + dp(10), self.pos[1]
+            size: self.width - dp(20), 1
+    BoxLayout:
+        padding: dp(10), dp(5)
+        orientation: 'vertical'
+        Label:
+            text: root.title
+            halign: 'left'
+            text_size: self.size
+            font_size: sp(18)
+        Label:
+            text: root.last_modification
+            color: 0.5, 0.5, 0.5, 1
+            font_size: sp(12)
+            halign: 'left'
+            text_size: self.size
+
+<Settings>:
+    BoxLayout:
+        pos_hint: {'top': 1}
+        orientation: 'vertical'
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '48dp'
+            padding: '15dp', '5dp'
+            canvas:
+                Color:
+                    rgb: .3, .3, .3
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            Label:
+                text: 'Settings'
+                font_size: '16sp'
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+
+
+            ActionButton:
+                id:backbutton
+                text: '<'
+                size_hint_x: None
+                width: self.height
+                on_release: app.go_notes()
+
+        BoxLayout:
+            orientation: 'horizontal'
+            Button:
+                text: 'Link to dropbox'
+                size_hint: None, None
+                width: dp(128)
+                height: dp(32)
+                pos_hint: {'center_x': 0.5}
+                on_release: app.start_dropbox_link()
+            TextInput:
+                id: dropbox_code
+                hint: 'Dropbox access code'
+                height: dp(32)
+                size_hint: 1, None
+                on_text_validate: app.finish_dropbox_link(self.text)
+            Button:
+                text: 'Dropbox Logout'
+                size_hint: None, None
+                width: dp(32)
+                height: dp(32)
+                pos_hint: {'center_x': 0.5}
+                on_release: app.logout_dropbox()
+        Button:
+            text:'text'
+            size_hint: 1, None
+
+<HeadBar@BoxLayout>
+    text: ''
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: '48dp'
+    padding: '15dp', '5dp'
+    canvas:
+        Color:
+            rgb: .3, .3, .3
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    Label:
+        text: 'DownMD : ' + root.text 
+        font_size: '16sp'
+        text_size: self.size
+        halign: 'left'
+        valign: 'middle'
+
+    IconButton:
+        text: 'Settings'
+        source: 'datas/settings.png'
+        size_hint: None, None
+        pos_hint: {'center_y': 0.5}
+        size: dp(24), dp(24)
+        on_release: app.open_settings()
+
+
+<TodosScreen>:
+    BoxLayout:
+        pos_hint: {'top': 1}
+        orientation: 'vertical'
+        spacing: dp(10)
+ 
+        HeadBar:
+            text: 'Todos'
+
+        TodosRecycleView:
+            id: todolistview
+            data:app.todos
+            #size_hint: 1, None
+            #height: dp(40 * len(app.todos))
+
+    BoxLayout:
+        pos_hint: {'right': 1, 'bottom': 1}
+        padding: '10dp', '10dp'
+        size_hint: None, None
+        height: '68dp'
+        width: '68dp'
+        CircularButton:
+            text: '+'
+            height: '48dp'
+            width: '48dp'
+            on_release: app.add_todos()
+
+    BoxLayout:
+        pos_hint: {'left': 1, 'bottom': 1}
+        padding: '10dp', '10dp'
+        size_hint: None, None
+        height: '68dp'
+        width: '68dp'
+        CircularButton:
+            text: '>'
+            height: '48dp'
+            width: '48dp'
+            on_release: app.go_notes()
+
+
+<NotesScreen>:
+    BoxLayout:
+        pos_hint: {'top': 1}
+        orientation: 'vertical'
+        spacing: dp(10)
+        HeadBar:
+            text: 'Notes'
+
+        NotesRecycleView:
+            id: noteslistview
+            data:app.notes
+            #height: dp(40 * len(app.notes))
+
+    BoxLayout:
+        pos_hint: {'right': 1, 'bottom': 1}
+        padding: '10dp', '10dp'
+        size_hint: None, None
+        height: '68dp'
+        width: '68dp'
+        CircularButton:
+            text: '+'
+            height: '48dp'
+            width: '48dp'
+            on_release: app.add_note()
