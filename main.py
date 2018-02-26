@@ -38,8 +38,9 @@ from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from secrets import APP_KEY, APP_SECRET
-
-
+import re
+import humanize
+import dateparser
 import dropbox
 
 if platform in ('macosx', 'ios'):
@@ -187,10 +188,10 @@ class NoteListItem(RecycleDataViewBehavior, BoxLayout):
         ''' Respond to the selection of items in the view. '''
         self.selected = is_selected
         if is_selected:
-            print("selection changed to {0}".format(rv.data[index]))
+            #print("selection changed to {0}".format(rv.data[index]))
             self.parent.clear_selection()
-        else:
-            print("selection removed for {0}".format(rv.data[index]))
+       # else:
+       #     print("selection removed for {0}".format(rv.data[index]))
 
 
 class TodoListItem(RecycleDataViewBehavior, BoxLayout):
@@ -198,8 +199,10 @@ class TodoListItem(RecycleDataViewBehavior, BoxLayout):
     index = None
     selected = BooleanProperty(False)
     selectable = BooleanProperty(True)
+    line = StringProperty()
     text = StringProperty()
     due = StringProperty()
+    datetime = None
     done = BooleanProperty(False)
     filename = StringProperty()
 
@@ -247,6 +250,8 @@ class NoteApp(App):
     notes = ListProperty()
     todos = ListProperty()
 
+    stop_events = False
+
     def build(self):
         self.sync_th = None
 
@@ -269,8 +274,15 @@ class NoteApp(App):
                     content = fh.read().decode('utf-8')
                 for line in content.split('\n'):
                     if line.startswith('- [ ]') or line.startswith('- [x]'):
-                        self.todos.append({'text': line[5:].strip(),
-                                           'due': '',
+                        try:
+                            due = dateparser.parse(re.search('due:(\S*)', line).group(1))
+                        except AttributeError:
+                            due = ''
+                        text = re.sub('( due:\S*)', '', line[5:]).strip()
+                        self.todos.append({'line': line[5:].strip(),
+                                           'text': text,
+                                           'due': humanize.naturalday(due),
+                                           'datetime': due,
                                            'done': line.startswith('- [x]'),
                                            'filename': path})
 
@@ -312,6 +324,9 @@ class NoteApp(App):
 
     def save_note(self, filepath, index, content):
         # TODO : Categories in folder
+        if self.stop_events:
+            return
+
         print('Saving %s' % filepath)
         self.notes[index]['content'] = content
         with open(filepath, 'wb') as fh:
@@ -334,7 +349,7 @@ class NoteApp(App):
     def inverse_todo(self, index, is_selected):
         if is_selected:
             done = self.todos[index]['done']
-            text = self.todos[index]['text']
+            text = self.todos[index]['line']
             filepath = os.path.join(self.notes_fn, self.todos[index]['filename'])
             search_for = u'- [%s] %s' % ('x' if done else ' ', text)
             replace_with = u'- [%s] %s' % (' ' if done else 'x', text)
@@ -372,11 +387,13 @@ class NoteApp(App):
                 filepath=note.get('filepath'))
             self.root.add_widget(self.noteView)
         else:
+            self.stop_events = True
             self.noteView.index = index
             self.noteView.title = note.get('title')
-            self.noteView.content = note.get('content')
             self.noteView.last_modification = note.get('last_modification')
             self.noteView.filepath = note.get('filepath')
+            self.noteView.content = note.get('content')
+            self.stop_events = False
 
         self.transition.direction = 'left'
         self.root.current = 'noteView'
@@ -402,6 +419,9 @@ class NoteApp(App):
     #    self.refresh_notes()
 
     def set_note_title(self, filepath, index, title):
+        if self.stop_events:
+            return
+
         self.notes[index]['title'] = title
         os.rename(filepath, join(self.notes_fn, '%s.txt' % title))
         self.refresh_notes()

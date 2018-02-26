@@ -36,7 +36,7 @@ version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma seperated e.g. requirements = sqlite3,kivy
-requirements = git+https://github.com/kivy/plyer.git, kivy, requests, openssl, pygments, dropbox, urllib3
+requirements = git+https://github.com/kivy/plyer.git, kivy, requests, openssl, pygments, dropbox, urllib3, dateparser
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
