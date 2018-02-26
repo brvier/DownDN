@@ -72,6 +72,9 @@
         size_hint_y: None
         height: self.minimum_height
         orientation: 'vertical'
+        multiselect: False
+        touch_multiselect: False
+        touch_deselect_last: False
  
 <TodosRecycleView>:
     viewclass: 'TodoListItem'
@@ -134,6 +137,7 @@
 <TodoListItem>:
     height: dp(18)
     #size_hint_y: None
+    on_selected: app.inverse_todo(root.index, root.selected)
     #on_release: app.edit_note(root.note_index)
     canvas:
         Color:
@@ -169,7 +173,7 @@
 <NoteListItem>:
     height: dp(48)
     size_hint_y: None
-    on_selected: app.edit_note(root.index)
+    on_selected: app.edit_note(root.index, root.selected)
     canvas:
         Color:
             rgb: .2, .2, .2

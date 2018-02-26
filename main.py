@@ -188,6 +188,7 @@ class NoteListItem(RecycleDataViewBehavior, BoxLayout):
         self.selected = is_selected
         if is_selected:
             print("selection changed to {0}".format(rv.data[index]))
+            self.parent.clear_selection()
         else:
             print("selection removed for {0}".format(rv.data[index]))
 
@@ -200,6 +201,7 @@ class TodoListItem(RecycleDataViewBehavior, BoxLayout):
     text = StringProperty()
     due = StringProperty()
     done = BooleanProperty(False)
+    filename = StringProperty()
 
     def __init__(self, **kwargs):
         print(kwargs)
@@ -221,10 +223,10 @@ class TodoListItem(RecycleDataViewBehavior, BoxLayout):
         ''' Respond to the selection of items in the view. '''
         self.selected = is_selected
         if is_selected:
+            self.parent.clear_selection()
             print("selection changed to {0}".format(rv.data[index]))
         else:
             print("selection removed for {0}".format(rv.data[index]))
-
 
 class TodosScreen(Screen):
     ''' Main Screen listing todos and notes '''
@@ -250,6 +252,7 @@ class NoteApp(App):
 
         self.todosScreen = TodosScreen(name='todos')
         self.notesScreen = NotesScreen(name='notes')
+        self.noteView = None
         self.transition = SlideTransition(duration=.35)
         root = ScreenManager(transition=self.transition)
         root.add_widget(self.todosScreen)
@@ -258,14 +261,18 @@ class NoteApp(App):
         return root
 
     def load_todos(self):
-        with open(os.path.join(self.notes_fn, 'todo.txt'), 'rb') as fh:
-            content = fh.read().decode('utf-8')
         self.todos = []
-        for line in content.split('\n'):
-            if line.startswith('- [ ]'):
-                self.todos.append({'text': line[5:].strip(),
-                                   'due': '',
-                                   'done': False})
+        for path in os.listdir(self.notes_fn):
+            if 'todo' in path.lower():
+                print(path)
+                with open(os.path.join(self.notes_fn, path), 'rb') as fh:
+                    content = fh.read().decode('utf-8')
+                for line in content.split('\n'):
+                    if line.startswith('- [ ]') or line.startswith('- [x]'):
+                        self.todos.append({'text': line[5:].strip(),
+                                           'due': '',
+                                           'done': line.startswith('- [x]'),
+                                           'filename': path})
 
     def __init__later__(self, dt):
         self.load_todos()
@@ -324,30 +331,55 @@ class NoteApp(App):
         self.sync()
         self.go_notes()
 
-    def edit_note(self, index):
+    def inverse_todo(self, index, is_selected):
+        if is_selected:
+            done = self.todos[index]['done']
+            text = self.todos[index]['text']
+            filepath = os.path.join(self.notes_fn, self.todos[index]['filename'])
+            search_for = u'- [%s] %s' % ('x' if done else ' ', text)
+            replace_with = u'- [%s] %s' % (' ' if done else 'x', text)
+
+            with open(filepath, 'rb') as fh:
+                content = fh.read().decode('utf-8')
+
+            content = content.replace(search_for, replace_with)
+
+            with open(filepath, 'wb') as fh:
+                fh.write(content.encode('utf-8'))
+
+            self.todos[index]['done'] = not done
+            self.todosScreen.ids.todolistview.refresh_from_data()
+
+    def edit_note(self, index, is_selected):
+        if not is_selected:
+            return True
+
         note = self.notes[index]
         print('Edit Note %s' % note['filepath'])
-        name = 'note{}'.format(index)
         try:
             with open(note['filepath'], 'r') as fh:
                 note['content'] = fh.read().decode('utf-8')
         except Exception as err:
             print(err)
 
-        if self.root.has_screen(name):
-            self.root.remove_widget(self.root.get_screen(name))
+        if self.noteView is None:
+            self.noteView = NoteView(
+                name='noteView',
+                index=index,
+                title=note.get('title'),
+                content=note.get('content'),
+                last_modification=note.get('last_modification'),
+                filepath=note.get('filepath'))
+            self.root.add_widget(self.noteView)
+        else:
+            self.noteView.index = index
+            self.noteView.title = note.get('title')
+            self.noteView.content = note.get('content')
+            self.noteView.last_modification = note.get('last_modification')
+            self.noteView.filepath = note.get('filepath')
 
-        view = NoteView(
-            name=name,
-            index=index,
-            title=note.get('title'),
-            content=note.get('content'),
-            last_modification=note.get('last_modification'),
-            filepath=note.get('filepath'))
-
-        self.root.add_widget(view)
         self.transition.direction = 'left'
-        self.root.current = view.name
+        self.root.current = 'noteView'
 
     def add_note(self):
         idx = 1
