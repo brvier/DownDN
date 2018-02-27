@@ -188,10 +188,7 @@ class NoteListItem(RecycleDataViewBehavior, BoxLayout):
         ''' Respond to the selection of items in the view. '''
         self.selected = is_selected
         if is_selected:
-            #print("selection changed to {0}".format(rv.data[index]))
             self.parent.clear_selection()
-       # else:
-       #     print("selection removed for {0}".format(rv.data[index]))
 
 
 class TodoListItem(RecycleDataViewBehavior, BoxLayout):
@@ -231,6 +228,7 @@ class TodoListItem(RecycleDataViewBehavior, BoxLayout):
         else:
             print("selection removed for {0}".format(rv.data[index]))
 
+
 class TodosScreen(Screen):
     ''' Main Screen listing todos and notes '''
 
@@ -267,24 +265,27 @@ class NoteApp(App):
 
     def load_todos(self):
         self.todos = []
-        for path in os.listdir(self.notes_fn):
-            if 'todo' in path.lower():
-                print(path)
-                with open(os.path.join(self.notes_fn, path), 'rb') as fh:
-                    content = fh.read().decode('utf-8')
-                for line in content.split('\n'):
-                    if line.startswith('- [ ]') or line.startswith('- [x]'):
-                        try:
-                            due = dateparser.parse(re.search('due:(\S*)', line).group(1))
-                        except AttributeError:
-                            due = ''
-                        text = re.sub('( due:\S*)', '', line[5:]).strip()
-                        self.todos.append({'line': line[5:].strip(),
-                                           'text': text,
-                                           'due': humanize.naturalday(due),
-                                           'datetime': due,
-                                           'done': line.startswith('- [x]'),
-                                           'filename': path})
+        try:
+            for path in os.listdir(self.notes_fn):
+                if 'todo' in path.lower():
+                    print(path)
+                    with open(os.path.join(self.notes_fn, path), 'rb') as fh:
+                        content = fh.read().decode('utf-8')
+                    for line in content.split('\n'):
+                        if line.startswith('- [ ]') or line.startswith('- [x]'):
+                            try:
+                                due = dateparser.parse(re.search('due:(\S*)', line).group(1))
+                            except AttributeError:
+                                due = ''
+                            text = re.sub('( due:\S*)', '', line[5:]).strip()
+                            self.todos.append({'line': line[5:].strip(),
+                                               'text': text,
+                                               'due': humanize.naturalday(due),
+                                               'datetime': due,
+                                               'done': line.startswith('- [x]'),
+                                               'filename': path})
+        except OSError as err:
+            print(err)
 
     def __init__later__(self, dt):
         self.load_todos()
