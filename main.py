@@ -7,6 +7,9 @@ Simple application for reading/writing notes.
 '''
 __version__ = '1.0.1'
 
+from kivy.core.window import Window
+Window.softinput_mode = 'below_target'
+
 from os.path import join, exists, dirname, basename, relpath, splitext
 from os import walk, makedirs, stat
 from kivy.app import App
