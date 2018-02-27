@@ -36,7 +36,7 @@ version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma seperated e.g. requirements = sqlite3,kivy
-requirements = git+https://github.com/kivy/plyer.git, kivy, requests, openssl, pygments, dropbox, urllib3, dateparser
+requirements = git+https://github.com/kivy/plyer.git, kivy, requests, openssl, pygments, dropbox, urllib3, python-dateutil, setuptools, humanize
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -169,7 +169,7 @@ android.wakelock = False
 
 # (str) Name of the certificate to use for signing the debug version
 # Get a list of available identities: buildozer ios list_identities
-#ios.codesign.debug = "iPhone Developer: <lastname> <firstname> (<hexstring>)"
+ios.codesign.debug = "iPhone Developer: khertan@khertan.net (55GU2W78NV)"
 
 # (str) Name of the certificate to use for signing the release version
 #ios.codesign.release = %(ios.codesign.debug)s

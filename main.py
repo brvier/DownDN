@@ -40,7 +40,7 @@ from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from secrets import APP_KEY, APP_SECRET
 import re
 import humanize
-import dateparser
+from dateutil.parser import parse
 import dropbox
 
 if platform in ('macosx', 'ios'):
@@ -274,7 +274,7 @@ class NoteApp(App):
                     for line in content.split('\n'):
                         if line.startswith('- [ ]') or line.startswith('- [x]'):
                             try:
-                                due = dateparser.parse(re.search('due:(\S*)', line).group(1))
+                                due = parse(re.search('due:(\S*)', line).group(1))
                             except AttributeError:
                                 due = ''
                             text = re.sub('( due:\S*)', '', line[5:]).strip()
