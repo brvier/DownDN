@@ -30,7 +30,9 @@
         id: w_label
         pos: root.pos
         text: root.text
-        halign: 'right'
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
 
     TextInput:
         id: w_textinput
@@ -90,49 +92,13 @@
     on_content: app.save_note(self.filepath, self.index, self.content)
     on_title: app.set_note_title(self.filepath, self.index, self.title )
 
-    BoxLayout:
-
-        orientation: 'vertical'
-        BoxLayout:
-
-            orientation: 'horizontal'
-            size_hint_y: None
-            height: '48dp'
-            padding: '5dp'
-
-            canvas:
-                Color:
-                    rgb: .3, .3, .3
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-
-            ActionButton:
-                text: '<'
-                size_hint_x: None
-                width: self.height
-                on_release: app.go_notes()
-
-            MutableLabelTextInput:
-                text: root.title
-                font_size: '16sp'
-                multiline: False
-                padding: '15dp'
-                on_text: root.title = self.text
-
-            ActionButton:
-                text: 'X'
-                size_hint_x: None
-                width: self.height
-                on_release: app.del_note(root.filepath)
-
-        #MutableTextDocumentTextInput:
-        CodeInput:
-            id: w_textinput
-            text: root.content
-            on_text: root.content = self.text
-            background_color: (.1, .1, .1, 1)
-            foreground_color: (1, 1, 1, 1)
+    #MutableTextDocumentTextInput:
+    CodeInput:
+        id: w_textinput
+        text: root.content
+        on_text: root.content = self.text
+        background_color: (.1, .1, .1, 1)
+        foreground_color: (1, 1, 1, 1)
 
 <TodoListItem>:
     height: dp(18)
@@ -197,27 +163,44 @@
 
 <SettingsScreen>:
     BoxLayout:
-        orientation: 'horizontal'
+        orientation: 'vertical'
+        size_hint: 1, 1
+        spacing: dp(5)
+        padding: dp(10), dp(0), dp(10), dp(10)
+        Label:
+            text: 'Dropbox Synchronization: '
+            color: .7, .7, .7, 1
+            font_size: sp(16)
+            text_size: self.size
+            size_hint: 1, None
+  
         Button:
             text: 'Link to dropbox'
+            size_hint: None, None
+            width: dp(0) if app.connected_to_dropbox else dp(128)
+            height: dp(0) if app.connected_to_dropbox else dp(32)
+            opacity: 0 if app.connected_to_dropbox else 1
+            pos_hint: {'center_x': 0.5}
+            on_release: app.start_dropbox_link()
+
+        TextInput:
+            id: dropbox_code
+            hint: 'Dropbox access code'
+            height: dp(0) if app.connected_to_dropbox else dp(32)
+            opacity: 0 if app.connected_to_dropbox else 1
+            size_hint: 1, None
+            on_text_validate: app.finish_dropbox_link(self.text)
+
+        Button:
+            text: 'Dropbox Logout'
             size_hint: None, None
             width: dp(128)
             height: dp(32)
             pos_hint: {'center_x': 0.5}
-            on_release: app.start_dropbox_link()
-        TextInput:
-            id: dropbox_code
-            hint: 'Dropbox access code'
-            height: dp(32)
-            size_hint: 1, None
-            on_text_validate: app.finish_dropbox_link(self.text)
-    Button:
-        text: 'Dropbox Logout'
-        size_hint: None, None
-        width: dp(32)
-        height: dp(32)
-        pos_hint: {'center_x': 0.5}
-        on_release: app.logout_dropbox()
+            on_release: app.logout_dropbox()
+
+        Widget:
+            size_hint: 1, 1
 
 <HeadBar@BoxLayout>
     orientation: 'horizontal'
@@ -231,12 +214,23 @@
             pos: self.pos
             size: self.size
 
-    Label:
-        text: 'DownMD : ' + app.header_label 
+    #Label:
+    #    text: 'DownMD : ' + app.header_label 
+    #    font_size: '16sp'
+    #    text_size: self.size
+    #    halign: 'left'
+    #    valign: 'middle'
+
+
+    MutableLabelTextInput:
+        text: ('DownMD : ' + app.header_label) if not app.header_editable else app.header_label
         font_size: '16sp'
-        text_size: self.size
-        halign: 'left'
-        valign: 'middle'
+        multiline: False
+        padding: '15dp'
+        on_text: app.on_header_title_set(self.text)
+        editable: app.header_editable
+
+
 
     IconButton:
         text: app.menu_icon_text
@@ -244,7 +238,7 @@
         size_hint: None, None
         pos_hint: {'center_y': 0.5}
         size: dp(24), dp(24)
-        on_release: app.menu_icon()
+        on_release: app.on_menu_icon()
 
 
 <TodosScreen>:

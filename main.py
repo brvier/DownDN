@@ -10,7 +10,7 @@ __version__ = '1.0.1'
 from os.path import join, exists, dirname, basename, relpath, splitext
 from os import walk, makedirs, stat
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
+from kivy.uix.screenmanager import Screen, SlideTransition
 from kivy.properties import ListProperty, StringProperty, \
     NumericProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
@@ -120,6 +120,7 @@ class MutableTextInput(FloatLayout):
 
     text = StringProperty()
     multiline = BooleanProperty(True)
+    editable = BooleanProperty(False)
 
     def __init__(self, **kwargs):
         super(MutableTextInput, self).__init__(**kwargs)
@@ -136,6 +137,9 @@ class MutableTextInput(FloatLayout):
         return super(MutableTextInput, self).on_touch_down(touch)
 
     def edit(self):
+        if not self.editable:
+            return
+
         self.clear_widgets()
         self.add_widget(self.w_textinput)
         self.w_textinput.focus = True
@@ -257,6 +261,7 @@ class DownDN(App):
     menu_icon_text = StringProperty('Settings')
     menu_icon_source = StringProperty('datas/settings.png')
     header_label = StringProperty('Todos')
+    header_editable = BooleanProperty(False)
 
     def build(self):
         self.sync_th = None
@@ -409,15 +414,28 @@ class DownDN(App):
 
         self.root.ids.sm.transition.direction = 'left'
         self.root.ids.sm.current = 'noteView'
+        self.menu_icon_source = 'datas/back.png'
+        self.menu_icon_text = '<'
+        self.stop_events = True
+        self.header_label = self.noteView.title
+        self.stop_events = False
+        self.header_editable = True
+
+    def on_header_title_set(self, title):
+        print('new title')
+        if self.header_editable and self.noteView and not self.stop_events:
+            self.noteView.title = title
 
     def add_note(self):
         idx = 1
         while (exists(join(self.notes_fn, 'New note %s.txt' % idx))):
             idx += 1
-        self.notes.append(
-            {'title': 'New note %s' % idx, 'content': '', 'last_modification': '', 'mtime': 0})
-        note_index = len(self.notes) - 1
-        self.edit_note(note_index)
+        self.notes.insert(0,
+                          {'title': 'New note %s' % idx,
+                           'content': '', 'last_modification': '', 'mtime': 0,
+                           'filepath': join(self.notes_fn, 'New note %s.txt' % idx)})
+        note_index = 0
+        self.edit_note(note_index, True)
 
     def set_note_lastmodification(self, note_index):
         self.notes[note_index]['last_modification'] = time.time()
@@ -431,11 +449,18 @@ class DownDN(App):
     #    self.refresh_notes()
 
     def set_note_title(self, filepath, index, title):
+        print('Renaming %s -> %s' % (filepath, join(self.notes_fn, '%s.txt' % title)))
         if self.stop_events:
             return
 
         self.notes[index]['title'] = title
-        os.rename(filepath, join(self.notes_fn, '%s.txt' % title))
+        try:
+            os.rename(filepath, join(self.notes_fn, '%s.txt' % title))
+        except OSError as err:
+            if not os.path.basename(filepath).startswith('New note '):
+                print(err)
+
+        self.notes[index]['filepath'] = join(self.notes_fn, '%s.txt' % title)
         self.refresh_notes()
 
     def refresh_notes(self):
@@ -485,13 +510,15 @@ class DownDN(App):
         self.root.ids.sm.current = 'notes'
         self.menu_icon_source = 'datas/settings.png'
         self.menu_icon_text = 'Settings'
+        self.header_editable = False
         self.header_label = 'Notes'
-
+        
     def go_todos(self):
         self.root.ids.sm.transition.direction = 'right'
         self.root.ids.sm.current = 'todos'
         self.menu_icon_source = 'datas/settings.png'
         self.menu_icon_text = 'Settings'
+        self.header_editable = False
         self.header_label = 'Todos'
 
     def start_dropbox_link(self, *kwargs):
@@ -512,10 +539,12 @@ class DownDN(App):
         set_pref('user_id', None)
         self.connected_to_dropbox = False
 
-    def menu_icon(self):
-        if self.root.ids.sm.current == 'settings':
-            self.go_todos()
-            return
+    def on_menu_icon(self):
+        if self.root.ids.sm.current in ('settings', ):
+            return self.go_todos()
+        elif self.root.ids.sm.current in ('noteView', ):
+            return self.go_notes()
+
         self.root.ids.sm.transition.direction = 'left'
         self.root.ids.sm.current = 'settings'
         self.menu_icon_source = 'datas/back.png'
