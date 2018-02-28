@@ -7,9 +7,6 @@ Simple application for reading/writing notes.
 '''
 __version__ = '1.0.1'
 
-from kivy.core.window import Window
-Window.softinput_mode = 'below_target'
-
 from os.path import join, exists, dirname, basename, relpath, splitext
 from os import walk, makedirs, stat
 from kivy.app import App
@@ -45,6 +42,11 @@ import re
 import humanize
 from dateutil.parser import parse
 import dropbox
+from kivy.lang import Builder
+
+from kivy.core.window import Window
+Window.softinput_mode = 'below_target'
+
 
 if platform in ('macosx', 'ios'):
     HomePath = os.path.expanduser('~/Documents/')
@@ -240,11 +242,11 @@ class NotesScreen(Screen):
     ''' Main Screen listing todos and notes '''
 
 
-class Settings(Screen):
+class SettingsScreen(Screen):
     theme = StringProperty('dark')
 
 
-class NoteApp(App):
+class DownDN(App):
 
     dbo = DropboxOAuth2FlowNoRedirect(APP_KEY, APP_SECRET)
     connected_to_dropbox = BooleanProperty()
@@ -252,19 +254,25 @@ class NoteApp(App):
     todos = ListProperty()
 
     stop_events = False
+    menu_icon_text = StringProperty('Settings')
+    menu_icon_source = StringProperty('datas/settings.png')
+    header_label = StringProperty('Todos')
 
     def build(self):
         self.sync_th = None
 
-        self.todosScreen = TodosScreen(name='todos')
-        self.notesScreen = NotesScreen(name='notes')
+        #self.todosScreen = TodosScreen(name='todos')
+        #self.notesScreen = NotesScreen(name='notes')
         self.noteView = None
         self.transition = SlideTransition(duration=.35)
-        root = ScreenManager(transition=self.transition)
-        root.add_widget(self.todosScreen)
-        root.add_widget(self.notesScreen)
+        self.mainWidget = Builder.load_file('note.kv')
+        
+        #print(self.mainWidget.ids.sm.ids)
+        #self.todosScreen = self.mainWidget.ids.sm.ids.todos
+        #self.notesScreen = self.mainWidget.ids.sm.ids.notes
+
         Clock.schedule_once(self.__init__later__, 0)
-        return root
+        return self.mainWidget
 
     def load_todos(self):
         self.todos = []
@@ -367,7 +375,7 @@ class NoteApp(App):
                 fh.write(content.encode('utf-8'))
 
             self.todos[index]['done'] = not done
-            self.todosScreen.ids.todolistview.refresh_from_data()
+            self.mainWidget.ids.todosScreen.ids.todolistview.refresh_from_data()
 
     def edit_note(self, index, is_selected):
         if not is_selected:
@@ -389,7 +397,7 @@ class NoteApp(App):
                 content=note.get('content'),
                 last_modification=note.get('last_modification'),
                 filepath=note.get('filepath'))
-            self.root.add_widget(self.noteView)
+            self.root.ids.sm.add_widget(self.noteView)
         else:
             self.stop_events = True
             self.noteView.index = index
@@ -399,8 +407,8 @@ class NoteApp(App):
             self.noteView.content = note.get('content')
             self.stop_events = False
 
-        self.transition.direction = 'left'
-        self.root.current = 'noteView'
+        self.root.ids.sm.transition.direction = 'left'
+        self.root.ids.sm.current = 'noteView'
 
     def add_note(self):
         idx = 1
@@ -473,12 +481,18 @@ class NoteApp(App):
             traceback.print_stack()
 
     def go_notes(self):
-        self.transition.direction = 'left'
-        self.root.current = 'notes'
+        self.root.ids.sm.transition.direction = 'left'
+        self.root.ids.sm.current = 'notes'
+        self.menu_icon_source = 'datas/settings.png'
+        self.menu_icon_text = 'Settings'
+        self.header_label = 'Notes'
 
     def go_todos(self):
-        self.transition.direction = 'right'
-        self.root.current = 'todos'
+        self.root.ids.sm.transition.direction = 'right'
+        self.root.ids.sm.current = 'todos'
+        self.menu_icon_source = 'datas/settings.png'
+        self.menu_icon_text = 'Settings'
+        self.header_label = 'Todos'
 
     def start_dropbox_link(self, *kwargs):
         import webbrowser
@@ -498,17 +512,20 @@ class NoteApp(App):
         set_pref('user_id', None)
         self.connected_to_dropbox = False
 
-    def open_settings(self):
-        if not hasattr(self, 'settingsScreen'):
-            self.settingsScreen = Settings(name='settings')
-            self.root.add_widget(self.settingsScreen)
-        self.transition.direction = 'left'
-        self.root.current = 'settings'
+    def menu_icon(self):
+        if self.root.ids.sm.current == 'settings':
+            self.go_todos()
+            return
+        self.root.ids.sm.transition.direction = 'left'
+        self.root.ids.sm.current = 'settings'
+        self.menu_icon_source = 'datas/back.png'
+        self.menu_icon_text = '<'
+        self.header_label = 'Settings'
 
     @property
     def notes_fn(self):
-        return join(self.user_data_dir, 'DownDN')
+        return join(self.user_data_dir, 'notes')
 
 
 if __name__ == '__main__':
-    NoteApp().run()
+    DownDN().run()

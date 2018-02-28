@@ -195,65 +195,31 @@
             halign: 'left'
             text_size: self.size
 
-<Settings>:
+<SettingsScreen>:
     BoxLayout:
-        pos_hint: {'top': 1}
-        orientation: 'vertical'
-        BoxLayout:
-            orientation: 'horizontal'
-            size_hint_y: None
-            height: '48dp'
-            padding: '15dp', '5dp'
-            canvas:
-                Color:
-                    rgb: .3, .3, .3
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-
-            Label:
-                text: 'Settings'
-                font_size: '16sp'
-                text_size: self.size
-                halign: 'left'
-                valign: 'middle'
-
-
-            ActionButton:
-                id:backbutton
-                text: '<'
-                size_hint_x: None
-                width: self.height
-                on_release: app.go_todos()
-
-        BoxLayout:
-            orientation: 'horizontal'
-            Button:
-                text: 'Link to dropbox'
-                size_hint: None, None
-                width: dp(128)
-                height: dp(32)
-                pos_hint: {'center_x': 0.5}
-                on_release: app.start_dropbox_link()
-            TextInput:
-                id: dropbox_code
-                hint: 'Dropbox access code'
-                height: dp(32)
-                size_hint: 1, None
-                on_text_validate: app.finish_dropbox_link(self.text)
-            Button:
-                text: 'Dropbox Logout'
-                size_hint: None, None
-                width: dp(32)
-                height: dp(32)
-                pos_hint: {'center_x': 0.5}
-                on_release: app.logout_dropbox()
+        orientation: 'horizontal'
         Button:
-            text:'text'
+            text: 'Link to dropbox'
+            size_hint: None, None
+            width: dp(128)
+            height: dp(32)
+            pos_hint: {'center_x': 0.5}
+            on_release: app.start_dropbox_link()
+        TextInput:
+            id: dropbox_code
+            hint: 'Dropbox access code'
+            height: dp(32)
             size_hint: 1, None
+            on_text_validate: app.finish_dropbox_link(self.text)
+    Button:
+        text: 'Dropbox Logout'
+        size_hint: None, None
+        width: dp(32)
+        height: dp(32)
+        pos_hint: {'center_x': 0.5}
+        on_release: app.logout_dropbox()
 
 <HeadBar@BoxLayout>
-    text: ''
     orientation: 'horizontal'
     size_hint_y: None
     height: '48dp'
@@ -266,35 +232,27 @@
             size: self.size
 
     Label:
-        text: 'DownMD : ' + root.text 
+        text: 'DownMD : ' + app.header_label 
         font_size: '16sp'
         text_size: self.size
         halign: 'left'
         valign: 'middle'
 
     IconButton:
-        text: 'Settings'
-        source: 'datas/settings.png'
+        text: app.menu_icon_text
+        source: app.menu_icon_source
         size_hint: None, None
         pos_hint: {'center_y': 0.5}
         size: dp(24), dp(24)
-        on_release: app.open_settings()
+        on_release: app.menu_icon()
 
 
 <TodosScreen>:
-    BoxLayout:
-        pos_hint: {'top': 1}
-        orientation: 'vertical'
-        spacing: dp(10)
- 
-        HeadBar:
-            text: 'Todos'
-
-        TodosRecycleView:
-            id: todolistview
-            data:app.todos
-            #size_hint: 1, None
-            #height: dp(40 * len(app.todos))
+    TodosRecycleView:
+        id: todolistview
+        data:app.todos
+        #size_hint: 1, None
+        #height: dp(40 * len(app.todos))
 
     BoxLayout:
         orientation: 'vertical'
@@ -317,20 +275,11 @@
             width: '48dp'
             on_release: app.add_todos()
 
-
-
 <NotesScreen>:
-    BoxLayout:
-        pos_hint: {'top': 1}
-        orientation: 'vertical'
-        spacing: dp(10)
-        HeadBar:
-            text: 'Notes'
-
-        NotesRecycleView:
-            id: noteslistview
-            data:app.notes
-            #height: dp(40 * len(app.notes))
+    NotesRecycleView:
+        id: noteslistview
+        data:app.notes
+        #height: dp(40 * len(app.notes))
 
     BoxLayout:
         pos_hint: {'right': 1, 'bottom': 1}
@@ -352,3 +301,24 @@
             height: '48dp'
             width: '48dp'
             on_release: app.add_note()
+
+# Main Layout
+BoxLayout:
+    #pos_hint: {'top': 1}
+    orientation: 'vertical'
+    HeadBar:
+        text: 'Notes'
+
+    ScreenManager:
+        id: sm
+
+        TodosScreen:
+            name:'todos'
+            id: todosScreen
+
+        NotesScreen:
+            name:'notes'
+            id: notesScreen
+
+        SettingsScreen:
+            name:'settings'
