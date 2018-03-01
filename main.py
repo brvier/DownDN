@@ -44,6 +44,8 @@ from dateutil.parser import parse
 import dropbox
 from kivy.lang import Builder
 
+import datetime
+
 from kivy.core.window import Window
 Window.softinput_mode = 'below_target'
 
@@ -162,6 +164,7 @@ class NoteView(Screen):
     title = StringProperty()
     content = StringProperty()
     last_modification = StringProperty()
+    natural_last_modification = StringProperty()
     mtime = NumericProperty()
     filepath = StringProperty()
 
@@ -174,6 +177,7 @@ class NoteListItem(RecycleDataViewBehavior, BoxLayout):
     title = StringProperty()
     content = StringProperty()
     last_modification = StringProperty()
+    natural_last_modification = StringProperty()
     mtime = NumericProperty()
     filepath = StringProperty()
 
@@ -324,7 +328,7 @@ class DownDN(App):
                     self.notes.append({'title': splitext(basename(afile))[0],
                                        'category': dirname(relpath(join(afile, path), self.notes_fn)),
                                        'last_modification': time.asctime(time.localtime(mtime)),
-                                       'natural_last_modifcation': humanize.naturalday(time.asctime(time.localtime(mtime))),
+                                       'natural_last_modification': humanize.naturalday(datetime.datetime.fromtimestamp(mtime)),
                                        'mtime': mtime,
                                        'content': '',
                                        'filepath': join(path, afile)})
@@ -519,6 +523,7 @@ class DownDN(App):
         self.menu_icon_text = 'Settings'
         self.header_editable = False
         self.header_label = 'Todos'
+        self.load_todos()
 
     def start_dropbox_link(self, *kwargs):
         import webbrowser

@@ -69,7 +69,7 @@
 <NotesRecycleView>:
     viewclass: 'NoteListItem'
     SelectableRecycleBoxLayout:
-        default_size: None, dp(56)
+        default_size: None, dp(40)
         default_size_hint: 1, None
         size_hint_y: None
         height: self.minimum_height
@@ -126,7 +126,7 @@
                 text: root.text
                 halign: 'left'
                 text_size: self.size
-                fond_size: sp(18)
+                font_size: sp(14)
             Label:
                 text: root.due if root.due else 'None'
                 color: 0.5, 0.5, 0.5, 1
@@ -148,13 +148,14 @@
     BoxLayout:
         padding: dp(10), dp(5)
         orientation: 'vertical'
+        pos_hint: {'center_y': 0.5}
         Label:
             text: root.title
             halign: 'left'
             text_size: self.size
-            font_size: sp(18)
+            font_size: sp(14)
         Label:
-            text: root.last_modification
+            text: root.natural_last_modification
             color: 0.5, 0.5, 0.5, 1
             font_size: sp(12)
             halign: 'left'
@@ -176,7 +177,6 @@
         Button:
             text: 'Link to dropbox'
             size_hint: 1, None
-            #width: dp(0) if app.connected_to_dropbox else dp(128)
             height: dp(0) if app.connected_to_dropbox else dp(32)
             opacity: 0 if app.connected_to_dropbox else 1
             pos_hint: {'center_x': 0.5}
@@ -189,6 +189,15 @@
             opacity: 0 if app.connected_to_dropbox else 1
             size_hint: 1, None
             on_text_validate: app.finish_dropbox_link(self.text)
+
+        Button:
+            text: 'Validate Code'
+            size_hint: 1, None
+            height: dp(0) if app.connected_to_dropbox else dp(32)
+            opacity: 0 if app.connected_to_dropbox else 1
+            pos_hint: {'center_x': 0.5}
+            on_release: app.finish_dropbox_link(dropbox_code.text)
+
 
         Button:
             text: 'Dropbox Logout'
@@ -235,8 +244,6 @@
     TodosRecycleView:
         id: todolistview
         data:app.todos
-        #size_hint: 1, None
-        #height: dp(40 * len(app.todos))
 
     BoxLayout:
         orientation: 'vertical'
@@ -263,7 +270,6 @@
     NotesRecycleView:
         id: noteslistview
         data:app.notes
-        #height: dp(40 * len(app.notes))
 
     BoxLayout:
         pos_hint: {'right': 1, 'bottom': 1}
@@ -288,7 +294,6 @@
 
 # Main Layout
 BoxLayout:
-    #pos_hint: {'top': 1}
     orientation: 'vertical'
     HeadBar:
         text: 'Notes'
