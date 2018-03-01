@@ -253,7 +253,7 @@ class SettingsScreen(Screen):
 class DownDN(App):
 
     dbo = DropboxOAuth2FlowNoRedirect(APP_KEY, APP_SECRET)
-    connected_to_dropbox = BooleanProperty()
+    connected_to_dropbox = BooleanProperty(False)
     notes = ListProperty()
     todos = ListProperty()
 
@@ -266,15 +266,9 @@ class DownDN(App):
     def build(self):
         self.sync_th = None
 
-        #self.todosScreen = TodosScreen(name='todos')
-        #self.notesScreen = NotesScreen(name='notes')
         self.noteView = None
         self.transition = SlideTransition(duration=.35)
         self.mainWidget = Builder.load_file('note.kv')
-        
-        #print(self.mainWidget.ids.sm.ids)
-        #self.todosScreen = self.mainWidget.ids.sm.ids.todos
-        #self.notesScreen = self.mainWidget.ids.sm.ids.notes
 
         Clock.schedule_once(self.__init__later__, 0)
         return self.mainWidget
@@ -309,6 +303,7 @@ class DownDN(App):
 
         try:
             self.dbx = dropbox.Dropbox(get_pref('access_token'))
+            self.dbx.users.get_space_usage()
             self.connected_to_dropbox = True
         except Exception as err:
             print('Can t connect to dropbox')
@@ -329,6 +324,7 @@ class DownDN(App):
                     self.notes.append({'title': splitext(basename(afile))[0],
                                        'category': dirname(relpath(join(afile, path), self.notes_fn)),
                                        'last_modification': time.asctime(time.localtime(mtime)),
+                                       'natural_last_modifcation': humanize.naturalday(time.asctime(time.localtime(mtime))),
                                        'mtime': mtime,
                                        'content': '',
                                        'filepath': join(path, afile)})
@@ -482,6 +478,9 @@ class DownDN(App):
         try:
             # TODO: Do the sync
             from sync import load_state, check_remote, check_local, save_state
+            if not get_pref('access_token'):
+                return
+
             dbx = dropbox.Dropbox(get_pref('access_token'))
             # Change current dir for Synchronator
             # os.chdir(self.notes_fn)
@@ -512,7 +511,7 @@ class DownDN(App):
         self.menu_icon_text = 'Settings'
         self.header_editable = False
         self.header_label = 'Notes'
-        
+
     def go_todos(self):
         self.root.ids.sm.transition.direction = 'right'
         self.root.ids.sm.current = 'todos'
@@ -533,7 +532,7 @@ class DownDN(App):
         set_pref('user_id', user_id)
         self.connected_to_dropbox = True
 
-    def logout_dropbox(self, code, *kwargs):
+    def logout_dropbox(self, *kwargs):
         set_pref('access_token', None)
         set_pref('account_id', None)
         set_pref('user_id', None)

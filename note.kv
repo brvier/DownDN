@@ -97,21 +97,19 @@
         id: w_textinput
         text: root.content
         on_text: root.content = self.text
+        multiline: True
         background_color: (.1, .1, .1, 1)
         foreground_color: (1, 1, 1, 1)
 
 <TodoListItem>:
-    height: dp(18)
-    #size_hint_y: None
+    height: dp(48)
     on_selected: app.inverse_todo(root.index, root.selected)
-    #on_release: app.edit_note(root.note_index)
     canvas:
         Color:
-            rgb: .1, .1, .1
+            rgb: .2, .2, .2
         Rectangle:
-            pos: self.pos
-            size: self.width, 1
-
+            pos: self.pos[0] + dp(10), self.pos[1]
+            size: self.width - dp(20), 1
     BoxLayout:
         padding: dp(10), dp(5)
         orientation: 'horizontal'
@@ -128,12 +126,13 @@
                 text: root.text
                 halign: 'left'
                 text_size: self.size
+                fond_size: sp(18)
             Label:
                 text: root.due if root.due else 'None'
                 color: 0.5, 0.5, 0.5, 1
-                font_size: sp(10)
+                font_size: sp(12)
                 halign: 'left'
-                size: dp(64), dp(12) if root.due else dp(0)
+                #size: dp(64), dp(1) if root.due else dp(0)
                 text_size: self.size
   
 <NoteListItem>:
@@ -176,8 +175,8 @@
   
         Button:
             text: 'Link to dropbox'
-            size_hint: None, None
-            width: dp(0) if app.connected_to_dropbox else dp(128)
+            size_hint: 1, None
+            #width: dp(0) if app.connected_to_dropbox else dp(128)
             height: dp(0) if app.connected_to_dropbox else dp(32)
             opacity: 0 if app.connected_to_dropbox else 1
             pos_hint: {'center_x': 0.5}
@@ -185,7 +184,7 @@
 
         TextInput:
             id: dropbox_code
-            hint: 'Dropbox access code'
+            hint_text: 'Dropbox access code'
             height: dp(0) if app.connected_to_dropbox else dp(32)
             opacity: 0 if app.connected_to_dropbox else 1
             size_hint: 1, None
@@ -198,7 +197,9 @@
             height: dp(32)
             pos_hint: {'center_x': 0.5}
             on_release: app.logout_dropbox()
-
+            height: dp(0) if not app.connected_to_dropbox else dp(32)
+            opacity: 0 if not app.connected_to_dropbox else 1
+ 
         Widget:
             size_hint: 1, 1
 
@@ -214,14 +215,6 @@
             pos: self.pos
             size: self.size
 
-    #Label:
-    #    text: 'DownMD : ' + app.header_label 
-    #    font_size: '16sp'
-    #    text_size: self.size
-    #    halign: 'left'
-    #    valign: 'middle'
-
-
     MutableLabelTextInput:
         text: ('DownMD : ' + app.header_label) if not app.header_editable else app.header_label
         font_size: '16sp'
@@ -230,8 +223,6 @@
         on_text: app.on_header_title_set(self.text)
         editable: app.header_editable
 
-
-
     IconButton:
         text: app.menu_icon_text
         source: app.menu_icon_source
@@ -239,7 +230,6 @@
         pos_hint: {'center_y': 0.5}
         size: dp(24), dp(24)
         on_release: app.on_menu_icon()
-
 
 <TodosScreen>:
     TodosRecycleView:
