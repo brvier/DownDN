@@ -169,7 +169,7 @@ android.wakelock = False
 
 # (str) Name of the certificate to use for signing the debug version
 # Get a list of available identities: buildozer ios list_identities
-ios.codesign.debug = "iPhone Developer: khertan@khertan.net (55GU2W78NV)"
+ios.codesign.debug = "iPhone Developer: bhervier@chronolife.net (V263M8S2US)"
 
 # (str) Name of the certificate to use for signing the release version
 #ios.codesign.release = %(ios.codesign.debug)s
